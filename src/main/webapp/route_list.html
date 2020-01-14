@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>黑马旅游-搜索</title>
+    <link rel="stylesheet" type="text/css" href="css/common.css">
+    <link rel="stylesheet" href="css/search.css">
+    <script src="js/jquery-3.3.1.js"></script>
+    <script src="js/getParameter.js"></script>
+    <script>
+        $(function () {
+            let cid = getParameter("cid");
+            let rname = getParameter("rname");
+            if (rname) {
+                rname = window.decodeURI(rname);
+            }
+            queryRoute(cid, rname, 1, 10);
+        });
+
+        function queryRoute(cid, rname, turnPageCurrentPage, turnPageShowNum) {
+
+            $.post("route/queryRoute", {
+                "cid": cid,
+                "rname": rname,
+                "turnPageCurrentPage": turnPageCurrentPage,
+                "turnPageShowNum": turnPageShowNum
+            }, function (data) {
+                let turnPage = data.data;
+                let routeList = turnPage.list;
+                let str = "";
+                for (let i = 0; i < routeList.length; i++) {
+                    str += "<li>\n" +
+                        " <div class=\"img\"><img src=\"" + routeList[i].rimage + "\" style='width: 299px'></div>\n" +
+                        "   <div class=\"text1\">\n" +
+                        "     <p>" + routeList[i].rname + "</p>\n" +
+                        "     <br/>\n" +
+                        "     <p>" + routeList[i].routeIntroduce + "</p>\n" +
+                        "   </div>\n" +
+                        "   <div class=\"price\">\n" +
+                        "     <p class=\"price_num\">\n" +
+                        "         <span>&yen;</span>\n" +
+                        "         <span>" + routeList[i].price + "</span>\n" +
+                        "         <span>起</span>\n" +
+                        "     </p>\n" +
+                        "     <p><a href=\"route_detail.html?rid=" + routeList[i].rid + "\">查看详情</a></p>\n" +
+                        "   </div>\n" +
+                        " </li>\n";
+                }
+                $("#route").html(str);
+
+                /*
+                    <div class="pageNum">
+                        <ul>
+
+                            <li><a href="#">1</a></li>
+                            <li><a href="#">2</a></li>
+                            <li><a href="#">3</a></li>
+                            <li><a href="#">4</a></li>
+                            <li><a href="#">5</a></li>
+                            <li><a href="#">6</a></li>
+                            <li><a href="#">7</a></li>
+                            <li><a href="#">8</a></li>
+                            <li><a href="#">9</a></li>
+                            <li><a href="#">10</a></li>
+                            <li class="threeword"><a href="javascript:;">下一页</a></li>
+                            <li class="threeword"><a href="javascript:;">末页</a></li>
+                        </ul>
+                    </div>
+                </div>
+                 */
+
+                let turnPageTotalNum = turnPage.turnPageTotalNum;
+                let turnPageTotalPage = turnPage.turnPageTotalPage;
+                $("#turnPageTotalPage").text(turnPageTotalPage);
+                $("#turnPageTotalNum").text(turnPageTotalNum);
+
+
+                let lastPage = turnPageCurrentPage - 1 < 1 ? 1 : turnPageCurrentPage - 1;
+                let nextPage = turnPageCurrentPage + 1 > turnPageTotalPage ? turnPageTotalPage : turnPageCurrentPage + 1;
+
+                let start = 0;
+                let end = 0;
+                if (turnPageTotalPage <= 10) {
+                    start = 1;
+                    end = turnPageTotalPage;
+                } else {
+                    start = turnPageCurrentPage - 5;
+                    end = turnPageCurrentPage + 4;
+                    if (start < 1) {
+                        start = 1;
+                        end = 10;
+                    }
+                    if (end > turnPageTotalPage) {
+                        end = turnPageTotalPage;
+                        start = end - 9;
+                    }
+                }
+                let turnPageStr = ' <li onclick="queryRoute(' + cid+ ',' + rname +',' + 1 + ', ' + turnPageShowNum + ')"><a href="">首页</a></li>\n' +
+                    '<li class="threeword" onclick="queryRoute(' + cid + ',' + rname + ',' + lastPage + ', ' + turnPageShowNum + ')"><a href="#">上一页</a></li>';
+
+                for (let i = start; i <= end; i++) {
+                    if (i == turnPageCurrentPage) {
+                        turnPageStr += '<li class="curPage" onclick="queryRoute(' + cid + ', ' + rname  + ', ' + i + ', ' + turnPageShowNum + ')"><a href="#">' + i + '</a></li>';
+                    } else {
+                        turnPageStr += '<li onclick="queryRoute(' + cid + ', ' + rname  + ', ' + i + ', ' + turnPageShowNum + ')"><a href="#">' + i + '</a></li>';
+                    }
+                }
+                turnPageStr += '<li class="threeword" onclick="queryRoute(' + cid + ', ' + rname  + ', ' + nextPage + ', ' + turnPageShowNum + ')"><a href="javascript:;">下一页</a></li>\n' +
+                    '                            <li  onclick="queryRoute(' + cid + ', ' + rname  + ', ' + turnPageTotalPage + ', ' + turnPageShowNum + ')"class="threeword"><a href="javascript:;">末页</a></li>';
+                $("#turnPage").html(turnPageStr);
+            });
+        }
+    </script>
+</head>
+<body>
+<!--引入头部-->
+<div id="header"></div>
+<div class="page_one">
+    <div class="contant">
+        <div class="crumbs">
+            <img src="images/search.png" alt="">
+            <p>黑马旅行><span>搜索结果</span></p>
+        </div>
+        <div class="xinxi clearfix">
+            <div class="left">
+                <div class="header">
+                    <span>商品信息</span>
+                    <span class="jg">价格</span>
+                </div>
+                <ul id="route">
+
+                </ul>
+                <div class="page_num_inf">
+                    <i></i> 共
+                    <span id="turnPageTotalPage"></span>页<span id="turnPageTotalNum"></span>条
+                </div>
+                <div class="pageNum">
+                    <ul id="turnPage">
+                    </ul>
+                </div>
+            </div>
+            <div class="right">
+                <div class="top">
+                    <div class="hot">HOT</div>
+                    <span>热门推荐</span>
+                </div>
+                <ul>
+                    <li>
+                        <div class="left"><img src="images/04-search_09.jpg" alt=""></div>
+                        <div class="right">
+                            <p>清远新银盏温泉度假村酒店/自由行套...</p>
+                            <p>网付价<span>&yen;<span>899</span>起</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="left"><img src="images/04-search_09.jpg" alt=""></div>
+                        <div class="right">
+                            <p>清远新银盏温泉度假村酒店/自由行套...</p>
+                            <p>网付价<span>&yen;<span>899</span>起</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="left"><img src="images/04-search_09.jpg" alt=""></div>
+                        <div class="right">
+                            <p>清远新银盏温泉度假村酒店/自由行套...</p>
+                            <p>网付价<span>&yen;<span>899</span>起</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="left"><img src="images/04-search_09.jpg" alt=""></div>
+                        <div class="right">
+                            <p>清远新银盏温泉度假村酒店/自由行套...</p>
+                            <p>网付价<span>&yen;<span>899</span>起</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="left"><img src="images/04-search_09.jpg" alt=""></div>
+                        <div class="right">
+                            <p>清远新银盏温泉度假村酒店/自由行套...</p>
+                            <p>网付价<span>&yen;<span>899</span>起</span>
+                            </p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--引入头部-->
+<div id="footer"></div>
+<!--导入布局js，共享header和footer-->
+<script type="text/javascript" src="js/include.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>黑马旅游网-我的收藏</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="css/common.css">
+        <link rel="stylesheet" href="css/index.css">
+       <style>
+           .tab-content .row>div {
+            margin-top: 16px;
+           } 
+           .tab-content {
+            margin-bottom: 36px;
+           }
+       </style>
+       <script src="js/jquery-3.3.1.js"></script>
+        <script>
+            $(function () {
+
+                //查询登录信息
+                $.post("user/userSession",{},function (data) {
+                    if (data == null) {
+                        $("#login_out").show();
+                        $("#login").hide();
+                    } else if (data != null) {
+                        let user = data;
+                        $("#welcome").text("欢迎回来,"+data.name);
+                        $("#login_out").hide();
+                        $("#login").show();
+                        $("#uid").val(user.uid);
+                        myFavorite(1,8);
+                    }
+                });
+
+            });
+            function myFavorite(turnPageCurrentPage, turnPageShowNum) {
+                let uid = $("#uid").val();
+                $.post("favorite/myFavorite",{"uid":uid,"turnPageCurrentPage":turnPageCurrentPage,"turnPageShowNum":turnPageShowNum},function (data) {
+                    let myFavorite = data.data;
+                    let turnPageTotalNum = myFavorite.turnPageTotalNum;
+                    let turnPageTotalPage = myFavorite.turnPageTotalPage;
+                    let turnPageCurrentPage = myFavorite.turnPageCurrentPage;
+                    let routeList = myFavorite.list;
+
+                    let listStr = "";
+                    for (let i = 0; i < routeList.length; i++) {
+                        listStr += '<div class="col-md-3">\n' +
+                            '                                    <a href="route_detail.html?rid='+ routeList[i].rid +'">\n' +
+                            '                                        <img src="'+ routeList[i].rimage +'" alt="">\n' +
+                            '                                        <div class="has_border">\n' +
+                            '                                            <h3>'+ routeList[i].rname +'</h3>\n' +
+                            '                                            <div class="price">网付价<em>￥</em><strong>'+ routeList[i].price +'</strong><em>起</em></div>\n' +
+                            '                                        </div>\n' +
+                            '                                    </a>\n' +
+                            '                                </div>\n';
+                    }
+                    $("#myFavorite").html(listStr);
+
+                    let start = turnPageCurrentPage - 5;
+                    let end = turnPageCurrentPage + 4;
+
+                    if (turnPageTotalPage < 10) {
+                        start = 1;
+                        end = turnPageTotalPage;
+                    } else {
+                        if (start < 1) {
+                            start = 1;
+                            end = turnPageTotalPage;
+                        }
+                        if (end > turnPageTotalPage) {
+                            start = turnPageTotalPage - 9;
+                            end = turnPageTotalPage;
+                        }
+                    }
+
+                    let lastPage = turnPageCurrentPage - 1 < 1 ? 1 : turnPageCurrentPage - 1;
+                    let nextPage = turnPageCurrentPage + 1 > turnPageTotalPage ? turnPageTotalPage : Number(turnPageCurrentPage) + 1;
+                    let turnPageStr = ' <li onclick="myFavorite(' + turnPageCurrentPage + ', ' + turnPageShowNum + ')"><a href="">首页</a></li>\n' +
+                        '<li class="threeword" onclick="myFavorite(' + lastPage + ', ' + turnPageShowNum + ')"><a href="#">上一页</a></li>';
+
+                    for (let i = start; i <= end; i++) {
+                        if (i == turnPageCurrentPage) {
+                            turnPageStr += '<li class="curPage" onclick="myFavorite(' + i + ', ' + turnPageShowNum + ')"><a href="#">' + i + '</a></li>';
+                        } else {
+                            turnPageStr += '<li onclick="myFavorite(' + i + ', ' + turnPageShowNum + ')"><a href="#">' + i + '</a></li>';
+                        }
+                    }
+                    turnPageStr += '<li class="threeword" onclick="myFavorite(' + nextPage + ', ' + turnPageShowNum + ')"><a href="javascript:;">下一页</a></li>\n' +
+                        '                            <li  onclick="myFavorite(' + turnPageTotalPage + ', ' + turnPageShowNum + ')"class="threeword"><a href="javascript:;">末页</a></li>';
+                    $("#turnPage").html(turnPageStr);
+
+                });
+            }
+        </script>
+    </head>
+    <body>
+    <!--引入头部-->
+    <div id="header"></div>
+         <!-- 排行榜 start-->
+        <section id="content">            
+            <section class="hemai_jx">
+                <div class="jx_top">
+                    <div class="jx_tit">
+                        <img src="images/icon_5.jpg" alt="">
+                        <span>我的收藏</span>
+                    </div>                    
+                </div>
+                <div class="jx_content">
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="home">
+                            <div class="row" id="myFavorite">
+
+                            </div>
+                        </div>                       
+                    </div>
+                </div>
+                <div class="pageNum">
+                    <ul id="turnPage">
+
+                    </ul>
+                </div>
+            </section>                      
+        </section>
+    <input type="hidden" id="uid" value="">
+        <!-- 排行榜 end-->
+    	
+         <!--引入尾部-->
+    	<div id="footer"></div>
+        <!--导入布局js，共享header和footer-->
+        <script type="text/javascript" src="js/include.js"></script>
+    </body>
+</html>
